@@ -1,7 +1,7 @@
 #******************************************************************************************#
 # This is the script for analysing data for Microgrid                                      #
 # Author: K Bhargava                                                                       #
-# Last updated on: 2nd July 2020                                                           #
+# Last updated on: 6th July 2020                                                           #
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -10,6 +10,16 @@ library(tidyverse)
 library(lubridate)
 library(wesanderson)
 library(here)
+#******************************************************************************************#
+
+#******************************************************************************************#
+# Define macros - theme for all plots
+THEME <- theme(plot.title = element_text(size=9), legend.position = "bottom",
+               legend.key.size = unit(0.5, "cm"), 
+               legend.margin = margin(t=0,r=0,b=0,l=0), panel.grid.major = element_blank(), 
+               panel.grid.minor = element_blank(), panel.background = element_blank(), 
+               axis.line = element_line(colour = "black"), axis.text = element_text(size=10), 
+               axis.title = element_text(size=10)) 
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -46,8 +56,8 @@ write.csv(onHours, file=here(filepath,"onHours_all_data_nepal.csv"), row.names=F
 
 #******************************************************************************************#
 # Calculate daily data - imputed data
-na_seadec_sub <- imputed_data[,c(1:3,5,7,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,
-                                 43,45,47,49,51,53,54,56,58,60,62,64,66,68,70,72)]
+na_seadec_sub <- imputed_data[,c(1:3, seq(5,53,by=2), seq(54,72,by=2))]
+na_seadec_sub <- na_seadec_sub[,-6] # Remove SoC
 # Calculate daily loads
 na_seadec_sub <- gather(na_seadec_sub, id, value, c(4:37))
 system_daily <- na_seadec_sub %>% group_by(id, month, date) %>% summarise(value=sum(value))
@@ -87,8 +97,7 @@ write.csv(system_monthly, file=here(filepath,"monthly_avg_correctedData.csv"), r
 
 #******************************************************************************************#
 # Plot 6 - Typical user load (socket and lights) at Hall between 20th July and 31st Mar
-na_seadec_sub <- imputed_data[,c(1:3,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,
-                                 43,45,47,49,51,56,60,64,68)]
+na_seadec_sub <- imputed_data[,c(1:3,seq(11,51,by=2),56,60,64,68)]
 # Calculate user load - actual and predicted
 na_seadec_sub <- na_seadec_sub %>% mutate(Actual.User.Load.W=rowSums(na_seadec_sub[,c(4:28)]),
                                Predicted.User.Load.W=rep(predicted_data$User.Load.W,256))
@@ -100,15 +109,9 @@ typical_load <- rbind(typical_load, predicted_data)
 
 ggplot(typical_load, aes(timeUse, User.Load.W/1000.0, color=month)) + 
   geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) +
-  scale_y_continuous(breaks=seq(0,0.7,0.1)) + 
-  theme(legend.position = "bottom", plot.title = element_text(size=10), 
-        axis.text = element_text(size=10), axis.title = element_text(size=12)) +
-  labs(x="Time of day", y="User load (kW)", 
-  title="Typical day load profile at the Hall between July 2019 and March 2020")
+  scale_y_continuous(breaks=seq(0,0.7,0.1)) + THEME + labs(x="Time of day", y="User load (kW)", 
+  title="Typical day load profile at the Hall between Jul'19 and Mar'20")
 ggsave(here(plot_dir,"typical_load_jul19_dec20.png"))
-
-# Plots 7a-b
-# Typical user load and predicted load at the micro-grid’s nursery (a) and playground (b) buildings for July to Dec 2019.
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -126,24 +129,19 @@ na_seadec_sub <- na_seadec_sub %>%
 ggplot(na_seadec_sub, aes(timeUse, Diff/1000.0, color=month, shape=month)) +
   geom_point() + scale_shape_manual(values=c(1,4,1,4,1,4,1,4,1)) + 
   labs(x="Time of day", y="Prediction error (kW)", 
-       title="Over and under predictions of user load at Hall between July 2019 and March 2020") +
+       title="Over and under predictions of user load at Hall between Jul'19 and Mar'20") +
   scale_x_continuous(breaks=seq(0,24,2)) + scale_y_continuous(breaks=seq(-1,0.75,0.25)) + 
-  theme(legend.position = "bottom", plot.title = element_text(size=9), 
-        axis.text = element_text(size=10), axis.title = element_text(size=12))
+  THEME + geom_hline(aes(yintercept=0), color="black", linetype="dashed")
 ggsave(here(plot_dir,"diffPred_jul19_dec20.png"))
 
 pal <- wes_palette("Zissou1", 12, type = "continuous")
 ggplot(na_seadec_sub, aes(date, timeUse)) + geom_tile(aes(fill = Diff_range)) + 
   scale_fill_gradientn(colours = pal, breaks=c(1,3,6,9,12), labels = c("<-0.5", ">-0.4 & <-0.3",">-0.1 & <0", ">0.2 & <0.3", ">0.5")) + 
   scale_y_continuous(breaks=seq(0,24,by=3)) + xlab("X axis") + ylab("Y axis") + 
-  labs(title="Over and under predictions of user load at Hall between July 2019 and March 2020", 
-       y="Time of day", x = "DATE", fill="Error (kW)") + 
-  theme(plot.title = element_text(size=9), axis.text = element_text(size=10),
-        axis.title = element_text(size=12))                                                                                                                                
+  labs(title="Over and under predictions of user load at Hall between Jul'19 and Mar'20", 
+       y="Time of day", x = "DATE", fill="Error (kW)") + THEME + 
+  guides(fill = guide_colorbar(barwidth = 20))                                                                                                                           
 ggsave(here(plot_dir,"diffPred_tile_jul19_dec20.png"))
-
-# Plots 8b-c - User demand over and under predictions at the nurseries (b) and playground (c).
-
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -152,14 +150,10 @@ system_daily <- spread(system_daily, id, value)
 system_daily <- system_daily %>% mutate(days=as.numeric(date - as.Date("2019-07-19")))
 ggplot(system_daily, aes(days, System.overview.AC.Consumption.L1.W_ma/1000.0, color="Actual")) +
   geom_point(shape=8) + theme(legend.position="none") + 
-  labs(title="Daily AC consumption at the Hall between July 2019 and March 2020" , 
-       y="AC consumption (kW)", x = "Days since commissioning", colour="") + 
-  theme(plot.title = element_text(size=10),legend.position = "none", 
-        axis.text = element_text(size=10), axis.title = element_text(size=12)) +
-  scale_x_continuous(breaks = seq(1,260,28)) + scale_y_continuous(breaks=seq(0,6,0.5))
+  labs(title="Daily AC consumption at the Hall between Jul'19 and Mar'20" , 
+       y="AC consumption (kW)", x = "Days since commissioning", colour="") + THEME +
+  theme(legend.position = "none") + scale_x_continuous(breaks = seq(1,260,28)) 
 ggsave(here(plot_dir,"daily_acLoad_jul19_dec20.png"))
-
-# Plot 9-b - Daily AC consumption values since commissioning micro-grid (b)
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -188,31 +182,23 @@ plotTypical <- function(df, lim, br, p) {
     geom_line(aes(y=L_c/1000.0, color="L_c",linetype="L_c")) + 
     geom_line(aes(y = SoC/p, color = "SoC",linetype="SoC")) + 
     scale_y_continuous(breaks= seq(0,lim,br), sec.axis = sec_axis(~.*p, 
-                                                                  name = "State of Charge (%)")) +
+                                             name = "State of Charge (%)")) +
     labs(y="Energy (kW)", x = "Time of day", colour="Parameter", linetype="Parameter") +
-    scale_x_continuous(breaks=seq(0,24,by=2)) + theme(plot.title = element_text(size=10), 
-                                                      legend.position = "bottom",legend.box = "horizontal",
-                                                      legend.key.size = unit(0.6, "cm"), legend.margin = margin(t=0,r=0,b=0,l=0),
-                                                      axis.text = element_text(size=10), axis.title = element_text(size=12))
+    scale_x_continuous(breaks=seq(0,24,by=2)) + THEME
 }
 plotTypical(typical_day[typical_day$phase==1,], 1.75, 0.25, 60) + 
-  labs(title="Actual typical day profile for the Hall between Jul 2019 and Sep 2019")
+  labs(title="Actual typical day profile for the Hall between Jul'19 and Sep'19")
 ggsave(here(plot_dir,"typical_day_jul19_sep19.png"))
 plotTypical(typical_day[typical_day$phase==2,], 1.60, 0.20, 60) + 
-  labs(title="Actual typical day profile for the Hall between Oct 2019 and Dec 2019")
+  labs(title="Actual typical day profile for the Hall between Oct'19 and Dec'19")
 ggsave(here(plot_dir,"typical_day_oct19_dec19.png"))
 plotTypical(typical_day[typical_day$phase==3,], 1.60, 0.20, 60) + 
-  labs(title="Actual typical day profile for the Hall between Jan 2020 and Mar 2020")
+  labs(title="Actual typical day profile for the Hall between Jan'20 and Mar'20")
 ggsave(here(plot_dir,"typical_day_jan20_mar20.png"))
 #******************************************************************************************#
 
 #******************************************************************************************#
-# Plots 11a-d
-# Typical day showing key power generation and consumption parameters at the micro-grid during (a) Jul-Sep, (b) Oct-Dec and (c?) Jan-Mar. A predicted typical day for the hall is shown in Figure 11d.
-#******************************************************************************************#
-
-#******************************************************************************************#
-# Plots 12a-b - Daily average yield, capture losses and system losses at hall 
+# Plots 12a - Daily average yield, capture losses and system losses at hall 
 # Get daily data for PV power, Potential PV and AC load 
 # Yield= AC consumption, System loss=PV-Yield, Capture loss=Pot. PV- PV
 na_seadec_sub <- system_daily[,c(1,2,27,36:37)] 
@@ -225,15 +211,10 @@ hall_perf <- hall_perf %>% group_by(month, id) %>% summarise(value=mean(value))
 hall_perf <- as.data.frame(hall_perf)  
 ggplot(hall_perf, aes(month, value/1000.0, fill=id)) + 
   geom_bar(stat="identity", width=.5, position = "stack") + 
-  labs(title="Daily average electrical energy values at the Hall between July 2019 and March 2020" ,
+  scale_y_continuous(breaks=seq(0,12,2)) +
+  labs(title="Daily average electrical energy values at the Hall between Jul'19 and Mar'20" ,
        y="Consumed and potential electrical energy (kWh)", x = "Month", fill="Variable") +
   scale_fill_manual(labels = c("Yield", "Capture losses","System losses"), 
-                    values = wes_palette("GrandBudapest1", n = 3)) +
-  theme(plot.title = element_text(size=9), legend.position = "bottom",
-        legend.box = "horizontal",  legend.key.size = unit(0.5, "cm"), 
-        legend.margin = margin(t=0,r=0,b=0,l=0),
-        axis.text = element_text(size=10), axis.title = element_text(size=10)) 
+                    values = wes_palette("GrandBudapest1", n = 3)) + THEME
 ggsave(here(plot_dir,"hall_perf_jul19_mar20.png"))
-
-# Plot 12b - Daily average yield, capture losses and system losses at micro-grid (normalise? Font size too small Times – 8 pls on all as min).
 #******************************************************************************************#

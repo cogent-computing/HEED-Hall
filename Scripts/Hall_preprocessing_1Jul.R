@@ -2,7 +2,7 @@
 # Script for preprocessing Hall data for paper 5 and 6 to convert to hourly data,          #
 # analyse yield of hourly data and explore imputation techniques                           #
 # Authors: K Bhargava                                                                      #
-# Last updated on: 1st July, 2020                                                          #
+# Last updated on: 6th July, 2020                                                          #
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -16,6 +16,16 @@ library(xts)
 library(MLmetrics) #for RMSE
 library(timeDate) #for skewness
 library(here)
+#******************************************************************************************#
+
+#******************************************************************************************#
+# Define macros - theme for all yield plots
+THEME <- theme(plot.title = element_text(size=9), legend.position = "bottom",
+               legend.key.size = unit(0.5, "cm"), 
+               legend.margin = margin(t=0,r=0,b=0,l=0), panel.grid.major = element_blank(), 
+               panel.grid.minor = element_blank(), panel.background = element_blank(), 
+               axis.line = element_line(colour = "black"), axis.text = element_text(size=10), 
+               axis.title = element_text(size=10)) 
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -80,9 +90,9 @@ pal <- wes_palette("Zissou1", 100, type = "continuous")
 plotYield <- function(df) {
   ggplot(df, aes(date, timeUse)) + geom_tile(aes(fill = yield2)) + 
     scale_fill_gradientn(colours = pal, breaks=c(0,25,50,75,100)) + 
-    scale_y_continuous(breaks=seq(0,24,by=3)) + xlab("X axis") + ylab("Y axis") + 
-    labs(x = "Date", fill="Yield (%)") + theme(plot.title = element_text(size=11), 
-           axis.text = element_text(size=10), axis.title = element_text(size=12))
+    scale_y_continuous(breaks=seq(0,24,by=4)) + xlab("X axis") + ylab("Y axis") + 
+    labs(x = "Date", fill="Yield (%)") + THEME + guides(fill = guide_colorbar(barwidth = 15,
+                                                                            barheight = 0.5))
   
 }
 # Plot yield for CPE
