@@ -111,7 +111,7 @@ ggplot(typical_load, aes(timeUse, User.Load.W/1000.0, color=month)) +
   geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) +
   scale_y_continuous(breaks=seq(0,0.7,0.1)) + THEME + labs(x="Time of day", y="User load (kW)", 
   title="Typical day load profile at the Hall between Jul'19 and Mar'20")
-ggsave(here(plot_dir,"typical_load_jul19_dec20.png"))
+ggsave(here(plot_dir,"typical_load_jul19_mar20.png"))
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -132,7 +132,7 @@ ggplot(na_seadec_sub, aes(timeUse, Diff/1000.0, color=month, shape=month)) +
        title="Over and under predictions of user load at Hall between Jul'19 and Mar'20") +
   scale_x_continuous(breaks=seq(0,24,2)) + scale_y_continuous(breaks=seq(-1,0.75,0.25)) + 
   THEME + geom_hline(aes(yintercept=0), color="black", linetype="dashed")
-ggsave(here(plot_dir,"diffPred_jul19_dec20.png"))
+ggsave(here(plot_dir,"diffPred_jul19_mar20.png"))
 
 pal <- wes_palette("Zissou1", 12, type = "continuous")
 ggplot(na_seadec_sub, aes(date, timeUse)) + geom_tile(aes(fill = Diff_range)) + 
@@ -141,7 +141,7 @@ ggplot(na_seadec_sub, aes(date, timeUse)) + geom_tile(aes(fill = Diff_range)) +
   labs(title="Over and under predictions of user load at Hall between Jul'19 and Mar'20", 
        y="Time of day", x = "DATE", fill="Error (kW)") + THEME + 
   guides(fill = guide_colorbar(barwidth = 20))                                                                                                                           
-ggsave(here(plot_dir,"diffPred_tile_jul19_dec20.png"))
+ggsave(here(plot_dir,"diffPred_tile_jul19_mar20.png"))
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -153,7 +153,7 @@ ggplot(system_daily, aes(days, System.overview.AC.Consumption.L1.W_ma/1000.0, co
   labs(title="Daily AC consumption at the Hall between Jul'19 and Mar'20" , 
        y="AC consumption (kW)", x = "Days since commissioning", colour="") + THEME +
   theme(legend.position = "none") + scale_x_continuous(breaks = seq(1,260,28)) 
-ggsave(here(plot_dir,"daily_acLoad_jul19_dec20.png"))
+ggsave(here(plot_dir,"daily_acLoad_jul19_mar20.png"))
 #******************************************************************************************#
 
 #******************************************************************************************#
