@@ -1,7 +1,7 @@
 #**********************************************************************#
-# Script for stitching Hall data for paper 5 and 6                     #
+# Script for stitching Hall data from July 2019 to March 2020          #
 # Authors: K Bhargava                                                  #
-# Last updated on: 30th June, 2020                                     #
+# Last updated on: 17th July, 2020                                     #
 #**********************************************************************#
 
 #**********************************************************************#
@@ -117,7 +117,10 @@ for(k in seq_along(file_list)) {
                               grepl("Solar Charger PV power ", headers, fixed=TRUE) | 
                               grepl("Battery Monitor State of charge %", headers, fixed=TRUE) |
                               grepl("Battery Monitor Discharged Energy kWh", headers, fixed=TRUE) |
-                              grepl("Battery Monitor Charged Energy kWh", headers, fixed=TRUE) )])]
+                              grepl("Battery Monitor Charged Energy kWh", headers, fixed=TRUE) | 
+                              grepl("Battery Monitor Voltage V", headers, fixed=TRUE) |
+                              grepl("Solar Charger Battery watts W", headers, fixed=TRUE) | 
+                              grepl("System overview Battery Power W", headers, fixed=TRUE)  )])]
   colnames(df)[1] <- c("timestamp")
   
   # Adjust timestamp if Berlin time

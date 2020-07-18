@@ -1,7 +1,7 @@
 #******************************************************************************************#
 # This is the script for analysing predicted system data for Hall                          #
 # Author: K Bhargava                                                                       #
-# Last updated on: 6th July 2020                                                           #
+# Last updated on: 17th July 2020                                                           #
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -9,17 +9,19 @@
 library(tidyverse)
 library(lubridate)
 library(wesanderson)
+library(extrafont)
 library(here)
 #******************************************************************************************#
 
 #******************************************************************************************#
 # Define macros - theme for all plots
-THEME <- theme(plot.title = element_text(size=9), legend.position = "bottom",
-               legend.key.size = unit(0.5, "cm"), 
-               legend.margin = margin(t=0,r=0,b=0,l=0), panel.grid.major = element_blank(), 
+THEME <- theme(legend.position = "bottom", legend.text=element_text(size=10, family="Times New Roman"),
+               legend.key.size = unit(0.5, "cm"),legend.margin = margin(t=0,r=0,b=0,l=0), 
+               panel.grid.major.y = element_line(colour="grey"), 
                panel.grid.minor = element_blank(), panel.background = element_blank(), 
-               axis.line = element_line(colour = "black"), axis.text = element_text(size=10), 
-               axis.title = element_text(size=10)) 
+               axis.line = element_line(colour = "black"), 
+               axis.text = element_text(size=9, family="Times New Roman"),
+               axis.title = element_text(size=10, family="Times New Roman")) 
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -74,12 +76,12 @@ systemData <- systemData %>% mutate(timestamp=as.POSIXct(timestamp, tz="GMT",
                                     origin="1970-01-01"), timeUse=hour(timestamp))
 systemData <- gather(systemData, id, value, 2:8)
 
-typical_pred <- systemData %>% group_by(id, timeUse) %>% 
-  summarise(value = mean(value, na.rm=TRUE))
+typical_pred <- systemData %>% group_by(id, timeUse) %>% summarise(value = mean(value, na.rm=TRUE))
 typical_pred <- as.data.frame(typical_pred)
 typical_pred <- spread(typical_pred, id, value)
 colnames(typical_pred) <- c("timeUse","E_load","E_a","L_c","B_cp","B_dp","SoC","E_p")
 
+# "Actual typical day profile for the Hall between Jul'19 and Mar'20"
 ggplot(typical_pred, aes(x=timeUse)) + geom_line(aes(y=B_cp, color="B_cp", linetype="B_cp")) +
   geom_line(aes(y=abs(B_dp), color="B_dp",linetype="B_dp")) + 
   geom_line(aes(y=E_a, color="E_a",linetype="E_a")) +
@@ -87,10 +89,8 @@ ggplot(typical_pred, aes(x=timeUse)) + geom_line(aes(y=B_cp, color="B_cp", linet
   geom_line(aes(y=E_p, color="E_p",linetype="E_p")) +
   geom_line(aes(y=L_c, color="L_c",linetype="L_c")) + 
   geom_line(aes(y = SoC/65, color = "SoC",linetype="SoC")) + 
-  scale_y_continuous(breaks= seq(0,1.4,0.2), sec.axis = sec_axis(~.*65, 
-                                                                 name = "State of Charge (%)")) +
-  labs(y="Power (kW)", x = "Time of day", colour="Parameter", linetype="Parameter", 
-       title="Actual typical day profile for the Hall between Jul'19 and Mar'20") +
+  scale_y_continuous(breaks= seq(0,1.4,0.2), sec.axis = sec_axis(~.*65,name = "State of Charge (%)")) +
+  labs(y="Power (kW)", x = "Time of day", colour="", linetype="") +
   scale_x_continuous(breaks=seq(0,24,by=2)) + THEME
-ggsave(here(plot_dir,"typical_pred_jul19_mar20.png"))
+ggsave(here(plot_dir,"typical_pred_jul19_mar20.pdf"), width = 8, height = 8, units = "cm")
 #******************************************************************************************#
