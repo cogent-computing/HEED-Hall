@@ -1,7 +1,7 @@
 #******************************************************************************************#
 # This is the script for imputing missing data for community Hall                          #
 # Author: K Bhargava                                                                       #
-# Last updated on: 17th July 2020                                                          #
+# Last updated on: 21st July 2020                                                          #
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -178,22 +178,90 @@ na_seadec_correctedData <- na_seadec_correctedData %>%
 #******************************************************************************************#
 
 #******************************************************************************************#
+#* Estimate power outages based on SoC - CPE readings cut off at 60% SOC; 40% for system and socket data
+ggplot(na_seadec_correctedData[na_seadec_correctedData$month=="Feb",], aes(timestamp)) +
+  geom_line(aes(y=Battery.Monitor.State.of.charge.._original)) 
+
+test <- na_seadec_correctedData[na_seadec_correctedData$date>="2019-11-23" & 
+                                  na_seadec_correctedData$date<="2019-11-26",]
+ggplot(test, aes(timestamp, Battery.Monitor.State.of.charge.._original)) + geom_line()
+ggplot(test, aes(timestamp, CPE6.LED1_P_original)) + geom_line()
+ggplot(test, aes(timestamp)) + geom_line(aes(y=Battery.Monitor.State.of.charge.._original)) + 
+  geom_line(aes(y=CPE7.LED3_P_original))
+ggplot(test, aes(timestamp)) + geom_line(aes(y=System.overview.AC.Consumption.L1.W_original))
+ggplot(test, aes(timestamp)) + geom_line(aes(y=S4.vRELAY1_LVL_original))
+
 # Based on SoC, calculate actual PV power, Solar Battery power, AC consumption,
 # System Battery power, +ve/-ve actual solar battery power, +ve/-ve actual battery power
-# Cut off voltage for SoC: 
+socThresh <- 40 # for system and socket data
+cpeThresh <- 60 # for CPE data - all CPE seem to disappear at same time hence and of all missing not checked
 na_seadec_correctedData <- na_seadec_correctedData %>%
-  mutate(Actual.PV.power.W_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=40 &
-                                        is.na(Battery.Monitor.State.of.charge.._original)), 0, 
-                                     Solar.Charger.PV.power_ma),
-         Actual.Solar.Charger.Battery.Power_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=40 & 
-                                                         is.na(Solar.Charger.Battery.watts.W_original)),0,
-                                                      Solar.Charger.Battery.watts.W_ma),
-         Actual.AC.consumption_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=40 & 
-                                            is.na(System.overview.AC.Consumption.L1.W_original)),0,
-                                         System.overview.AC.Consumption.L1.W_ma),
-         Actual.System.Battery.Power_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=40 &
-                                                  is.na(System.overview.Battery.Power.W_original)), 0,
-                                               System.overview.Battery.Power.W_ma),
+  mutate(Actual.CPE1.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE1.LED1_P_original), 0, CPE1.LED1_P_ma),
+         Actual.CPE1.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE1.LED2_P_original), 0, CPE1.LED2_P_ma),
+         Actual.CPE1.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE1.LED3_P_original), 0, CPE1.LED3_P_ma),
+         Actual.CPE2.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE2.LED1_P_original), 0, CPE2.LED1_P_ma),
+         Actual.CPE2.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE2.LED2_P_original), 0, CPE2.LED2_P_ma),
+         Actual.CPE2.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE2.LED3_P_original), 0, CPE2.LED3_P_ma),
+         Actual.CPE3.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE3.LED1_P_original), 0, CPE3.LED1_P_ma),
+         Actual.CPE3.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE3.LED2_P_original), 0, CPE3.LED2_P_ma),
+         Actual.CPE3.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE3.LED3_P_original), 0, CPE3.LED3_P_ma),
+         Actual.CPE4.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE4.LED1_P_original), 0, CPE4.LED1_P_ma),
+         Actual.CPE4.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE4.LED2_P_original), 0, CPE4.LED2_P_ma),
+         Actual.CPE4.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE4.LED3_P_original), 0, CPE4.LED3_P_ma),
+         Actual.CPE5.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE5.LED1_P_original), 0, CPE5.LED1_P_ma),
+         Actual.CPE5.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE5.LED2_P_original), 0, CPE5.LED2_P_ma),
+         Actual.CPE5.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE5.LED3_P_original), 0, CPE5.LED3_P_ma),
+         Actual.CPE6.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE6.LED1_P_original), 0, CPE6.LED1_P_ma),
+         Actual.CPE6.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE6.LED2_P_original), 0, CPE6.LED2_P_ma),
+         Actual.CPE6.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE6.LED3_P_original), 0, CPE6.LED3_P_ma),
+         Actual.CPE7.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE7.LED1_P_original), 0, CPE7.LED1_P_ma),
+         Actual.CPE7.LED2_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE7.LED2_P_original), 0, CPE7.LED2_P_ma),
+         Actual.CPE7.LED3_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
+                                        is.na(CPE7.LED3_P_original), 0, CPE7.LED3_P_ma),
+         Actual.S1.AC_Day_Energy_session_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                    is.na(S1.AC_Day_Energy_session_original), 0, S1.AC_Day_Energy_session_ma),
+         Actual.S2.AC_Day_Energy_session_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                    is.na(S2.AC_Day_Energy_session_original), 0, S2.AC_Day_Energy_session_ma),
+         Actual.S3.AC_Day_Energy_session_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                    is.na(S3.AC_Day_Energy_session_original), 0, S3.AC_Day_Energy_session_ma),
+         Actual.S4.AC_Day_Energy_session_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                    is.na(S4.AC_Day_Energy_session_original), 0, S4.AC_Day_Energy_session_ma),
+         Actual.S1.vRELAY1_LVL_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                           is.na(S1.vRELAY1_LVL_original), 0, S1.vRELAY1_LVL_ma),
+         Actual.S2.vRELAY1_LVL_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                           is.na(S2.vRELAY1_LVL_original), 0, S2.vRELAY1_LVL_ma),
+         Actual.S3.vRELAY1_LVL_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                           is.na(S3.vRELAY1_LVL_original), 0, S3.vRELAY1_LVL_ma),
+         Actual.S4.vRELAY1_LVL_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                                           is.na(S4.vRELAY1_LVL_original), 0, S4.vRELAY1_LVL_ma),
+         Actual.Solar.Charger.Battery.Power_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                            is.na(Solar.Charger.Battery.watts.W_original)),0,Solar.Charger.Battery.watts.W_ma),
+         Actual.PV.power.W_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=socThresh &
+                            is.na(Solar.Charger.PV.power_original)), 0, Solar.Charger.PV.power_ma),
+         Actual.AC.consumption_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=socThresh & 
+                          is.na(System.overview.AC.Consumption.L1.W_original)),0,System.overview.AC.Consumption.L1.W_ma),
+         Actual.System.Battery.Power_ma=ifelse((Battery.Monitor.State.of.charge.._ma<=socThresh &
+                          is.na(System.overview.Battery.Power.W_original)), 0,System.overview.Battery.Power.W_ma),
          Positive.Actual.Solar.Charger.Battery.Power_ma=ifelse(Actual.Solar.Charger.Battery.Power_ma<0,0,
                                                                Actual.Solar.Charger.Battery.Power_ma),
          Negative.Actual.Solar.Charger.Battery.Power_ma=ifelse(Actual.Solar.Charger.Battery.Power_ma>0,0,
@@ -202,14 +270,38 @@ na_seadec_correctedData <- na_seadec_correctedData %>%
                                                         Actual.System.Battery.Power_ma),
          Negative.Actual.System.Battery.Power_ma=ifelse(Actual.System.Battery.Power_ma>0,0,
                                                         Actual.System.Battery.Power_ma))
-
-
-# Change the actual load values to zero between 4th and 18th of Sep - check if missing
-
-na_seadec_correctedData <- na_seadec_correctedData %>% 
-  mutate()
 #******************************************************************************************#
 
+#*#******************************************************************************************#
+# Apply corrections based on component failures 
+# Get patterns of missing data (system, CPE, sockets) and information in check sheets
+missingData <- na_seadec_correctedData[,c(4, which(grepl("original", 
+                                                         colnames(na_seadec_correctedData), fixed=TRUE)))]
+missingData <- missingData[,c(1,4,36,37, which(grepl("LED1_P", colnames(missingData), fixed=TRUE)|
+                                                 grepl("LED2_P", colnames(missingData), fixed=TRUE)|
+                                                 grepl("LED3_P", colnames(missingData), fixed=TRUE)|
+                                                 grepl("vRELAY1_LVL", colnames(missingData), fixed=TRUE) ))]
+missingData$load <- rowSums(missingData[5:29], na.rm=TRUE) 
+missingData <- missingData[,c(1:4,30,which(grepl("LED1_P", colnames(missingData), fixed=TRUE) | 
+                                             grepl("LED2_P", colnames(missingData), fixed=TRUE)|
+                                             grepl("LED3_P", colnames(missingData), fixed=TRUE)|
+                                             grepl("vRELAY1_LVL", colnames(missingData), fixed=TRUE) ))]
+
+ggplot(missingData, aes(x=timestamp)) + 
+  geom_line(aes(y=System.overview.AC.Consumption.L1.W_original), color="blue") + geom_line(aes(y=load)) 
+
+missingData <- gather(missingData, id, value, 2:30)
+missingData <- missingData %>% mutate(month=month(timestamp, label=TRUE, abbr=TRUE))
+missingLevel <- missingData %>% group_by(timestamp, id) %>% summarise(count=ifelse(is.na(value),0,1))
+missingLevel <- as.data.frame(missingLevel)
+missingLevel <- missingLevel %>% mutate(id=substr(id, 1, str_length(id)-9))
+missingLevel <- missingLevel %>% mutate(month=month(timestamp, label=TRUE, abbr=TRUE))
+ggplot(missingLevel, aes(timestamp, id)) + geom_tile(aes(fill = count)) + xlab("X axis") + ylab("Y axis") + 
+  labs(x = "Day of study", fill="Yield (%)") + THEME + 
+  guides(fill = guide_colorbar(barwidth = 8, barheight = 0.5))
+
+# Apply corrections based on reported component failures - NONE REPORTED CLEARLY IN CHECK SHEETS
 # Save corrected data
 na_seadec_correctedData <- na_seadec_correctedData %>% mutate(month=as.character(month))
 write.csv(na_seadec_correctedData, file=here(filepath,"na_seadec_correctedData.csv"), row.names=FALSE)
+#******************************************************************************************#

@@ -24,6 +24,7 @@ library(here)
 MONTHS <- c("Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar")
 THEME <- theme(legend.position = "bottom", legend.text=element_text(size=10, family="Times New Roman"),
                legend.key.size = unit(0.5, "cm"),legend.margin = margin(t=0,r=0,b=0,l=0), 
+               legend.title = element_text(size=10, family="Times New Roman"),
                panel.grid.major.y = element_line(colour="grey"), 
                panel.grid.minor = element_blank(), panel.background = element_blank(), 
                axis.line = element_line(colour = "black"), 
