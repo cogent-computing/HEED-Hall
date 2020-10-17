@@ -178,7 +178,7 @@ na_seadec_correctedData <- na_seadec_correctedData %>%
 #******************************************************************************************#
 
 #******************************************************************************************#
-#* Estimate power outages based on SoC - CPE readings cut off at 60% SOC; 40% for system and socket data
+#* Estimate power outages based on SoC - CPE readings cut off at 65% SOC; 50% for system and socket data
 ggplot(na_seadec_correctedData[na_seadec_correctedData$month=="Feb",], aes(timestamp)) +
   geom_line(aes(y=Battery.Monitor.State.of.charge.._original)) 
 
@@ -193,8 +193,8 @@ ggplot(test, aes(timestamp)) + geom_line(aes(y=S4.vRELAY1_LVL_original))
 
 # Based on SoC, calculate actual PV power, Solar Battery power, AC consumption,
 # System Battery power, +ve/-ve actual solar battery power, +ve/-ve actual battery power
-socThresh <- 40 # for system and socket data
-cpeThresh <- 60 # for CPE data - all CPE seem to disappear at same time hence and of all missing not checked
+socThresh <- 50 # for system and socket data
+cpeThresh <- 65 # for CPE data - all CPE seem to disappear at same time hence and of all missing not checked
 na_seadec_correctedData <- na_seadec_correctedData %>%
   mutate(Actual.CPE1.LED1_P_ma=ifelse(Battery.Monitor.State.of.charge.._ma<=cpeThresh & 
                                         is.na(CPE1.LED1_P_original), 0, CPE1.LED1_P_ma),

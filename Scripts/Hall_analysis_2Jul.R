@@ -1,7 +1,7 @@
 #******************************************************************************************#
 # This is the script for analysing corrected data for Hall                                 #
 # Author: K Bhargava                                                                       #
-# Last updated on: 21st July 2020                                                          #
+# Last updated on: 15th Oct 2020                                                          #
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -101,7 +101,7 @@ typical_load <- na_seadec_sub %>% group_by(month, timeUse) %>%
 typical_load <- as.data.frame(typical_load)
 typical_load <- rbind(typical_load, predicted_data)
 
-"Typical day load profile at the Hall between Jul'19 and Mar'20"
+#"Typical day load profile at the Hall between Jul'19 and Mar'20"
 ggplot(typical_load, aes(timeUse, User.Load.W/1000.0, color=month)) + 
   geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) + THEME + 
   scale_y_continuous(breaks=seq(0,0.7,0.1)) + theme(legend.text=element_text(size=7, family="Times New Roman"))+
@@ -130,26 +130,140 @@ ggplot(na_seadec_sub, aes(timeUse, Diff/1000.0, color=month, shape=month)) +
   theme(legend.text=element_text(size=7, family="Times New Roman"))
 ggsave(here(plot_dir,"diffPred_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
 
-pal <- wes_palette("Zissou1", 12, type = "continuous")
+pal <- wes_palette("Zissou1", 10000, type = "continuous")
 # title="Over and under predictions of user load at Hall between Jul'19 and Mar'20"
-ggplot(na_seadec_sub, aes(date, timeUse)) + geom_tile(aes(fill = Diff_range)) + 
-  scale_fill_gradientn(colours = pal, breaks=c(1,3,6,9,12), labels = c("<-0.5", ">-0.4 & <-0.3",">-0.1 & <0", ">0.2 & <0.3", ">0.5")) + 
-  scale_y_continuous(breaks=seq(0,24,by=3)) + xlab("X axis") + ylab("Y axis") + 
-  labs(y="Time of day", x = "DATE", fill="Error (kW)") + THEME + 
+ggplot(na_seadec_sub, aes(timeUse, date)) + geom_tile(aes(fill = Diff/1000)) + 
+  scale_fill_gradientn(colours = pal) + scale_y_date(date_breaks = "1 month") +
+  scale_x_continuous(breaks=seq(0,24,by=3)) + xlab("X axis") + ylab("Y axis") + 
+  labs(x="Time of day", y = "DATE", fill="Error (kW)") + THEME + 
   guides(fill = guide_colorbar(barheight = 8, barwidth = 0.5)) +
   theme(legend.text=element_text(size=7, family="Times New Roman"), legend.position = "right",
         legend.title = element_text(size=7, family="Times New Roman"))
-ggsave(here(plot_dir,"diffPred_tile_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+ggsave(here(plot_dir,"diffPred_jul19_mar20_yieldMap.pdf"), width = 8, height = 6, units = "cm")
+
+# prediction error as a function of time of day per reading
+ggplot(na_seadec_sub, aes(x=as.factor(timeUse), y=Diff/1000)) + geom_boxplot() + THEME + 
+  labs(y="Prediction error (kW)", x = "Time of day") + scale_y_continuous(breaks=seq(-1,0.8,0.2)) +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"diffPred_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# prediction error as a function of month per reading
+ggplot(na_seadec_sub, aes(x=as.factor(month), y=Diff/1000)) + geom_boxplot() + THEME + 
+  labs(y="Prediction error (kWh)", x = "Month") + scale_y_continuous(breaks=seq(-1,0.8,0.2)) 
+ggsave(here(plot_dir,"diffPred_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# actual user load as a function of time of day per reading
+ggplot(na_seadec_sub, aes(x=as.factor(timeUse), y=Actual.User.Load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Actual User Load (kW)", x = "Time of day") + scale_y_continuous(breaks=seq(0,1.2,0.2)) +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"userLoad_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# actual user load as a function of month per reading
+ggplot(na_seadec_sub, aes(x=as.factor(month), y=Actual.User.Load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Actual User Load (kWh)", x = "Month") + scale_y_continuous(breaks=seq(0,1.2,0.2))
+ggsave(here(plot_dir,"userLoad_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# Plotting separately for sockets and CPEs
+na_devs <- na_seadec_sub
+na_devs <- na_devs %>% mutate(Light.load.W =rowSums(na_devs[,c(4:24)]),
+                              Socket.load.W = rowSums(na_devs[,c(25:28)]))
+
+# light load as a function of time of day per reading
+ggplot(na_devs, aes(x=as.factor(timeUse), y=Light.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Light load (kW)", x = "Time of day") + scale_y_continuous(breaks=seq(0,1.0,0.01))  +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"lightLoad_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# light load as a function of month per reading
+ggplot(na_devs, aes(x=as.factor(month), y=Light.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Light load (kWh)", x = "Month") + scale_y_continuous(breaks=seq(0,1.0,0.01))
+ggsave(here(plot_dir,"lightLoad_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# socket load as a function of time of day per reading
+ggplot(na_devs, aes(x=as.factor(timeUse), y=Socket.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Socket load (kW)", x = "Time of day") + scale_y_continuous(breaks=seq(0,1.2,0.2))  +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"socketLoad_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# socket load as a function of month per reading
+ggplot(na_devs, aes(x=as.factor(month), y=Socket.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Socket load (kWh)", x = "Month") + scale_y_continuous(breaks=seq(0,1.2,0.2))
+ggsave(here(plot_dir,"socketLoad_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# Plotting behaviour of CPE and sockets for weekdays and weekends
+na_devs <- na_devs %>% mutate(weekday = as.character(wday(date, label=TRUE, abbr=TRUE)))
+
+# light load as a function of time of day per reading over weekdays and weekends
+ggplot(na_devs[na_devs$weekday %in% c("Mon","Tue","Wed","Thu","Fri"),], 
+       aes(x=as.factor(timeUse), y=Light.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Light load (kW)", x = "Time of day") + scale_y_continuous(breaks=seq(0,1.0,0.01))  +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"lightLoad_wday_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+ggplot(na_devs[na_devs$weekday %in% c("Sat","Sun"),], aes(x=as.factor(timeUse), y=Light.load.W/1000)) + 
+  geom_boxplot() + THEME + labs(y="Light load (kW)", x = "Time of day")  +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"lightLoad_wend_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# light load as a function of month per reading over weekdays and weekends
+ggplot(na_devs[na_devs$weekday %in% c("Mon","Tue","Wed","Thu","Fri"),], 
+       aes(x=as.factor(month), y=Light.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Light load (kWh)", x = "Month") + scale_y_continuous(breaks=seq(0,1.0,0.01))
+ggsave(here(plot_dir,"lightLoad_wday_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+ggplot(na_devs[na_devs$weekday %in% c("Sat","Sun"),], aes(x=as.factor(month), y=Light.load.W/1000)) + 
+  geom_boxplot() + THEME + labs(y="Light load (kWh)", x = "Month") 
+ggsave(here(plot_dir,"lightLoad_wend_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# socket load as a function of time of day per reading over weekdays and weekends
+ggplot(na_devs[na_devs$weekday %in% c("Mon","Tue","Wed","Thu","Fri"),], 
+       aes(x=as.factor(timeUse), y=Socket.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Socket load (kW)", x = "Time of day") + scale_y_continuous(breaks=seq(0,1.2,0.2))  +
+  scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"socketLoad_wday_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+ggplot(na_devs[na_devs$weekday %in% c("Sat","Sun"),], aes(x=as.factor(timeUse), y=Socket.load.W/1000)) + 
+  geom_boxplot() + THEME + labs(y="Socket load (kW)", x = "Time of day") + 
+  scale_y_continuous(breaks=seq(0,1.2,0.2))  + scale_x_discrete(breaks=seq(0,24,by=2))
+ggsave(here(plot_dir,"socketLoad_wend_tod_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+# socket load as a function of month per reading over weekdays and weekends
+ggplot(na_devs[na_devs$weekday %in% c("Mon","Tue","Wed","Thu","Fri"),], 
+       aes(x=as.factor(month), y=Socket.load.W/1000)) + geom_boxplot() + THEME + 
+  labs(y="Socket load (kWh)", x = "Month") + scale_y_continuous(breaks=seq(0,1.2,0.2))
+ggsave(here(plot_dir,"socketLoad_wday_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+
+ggplot(na_devs[na_devs$weekday %in% c("Sat","Sun"),], aes(x=as.factor(month), y=Socket.load.W/1000)) + 
+  geom_boxplot() + THEME + labs(y="Socket load (kWh)", x = "Month") + scale_y_continuous(breaks=seq(0,1.2,0.2))
+ggsave(here(plot_dir,"socketLoad_wend_month_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
 #******************************************************************************************#
 
 #******************************************************************************************#
 # Plots 9a - Daily AC consumption values since commissioning the hall (a)
 system_daily <- spread(system_daily, id, value)
 system_daily <- system_daily %>% mutate(days=as.numeric(date - as.Date("2019-07-19")))
-# title="Daily AC consumption at the Hall between Jul'19 and Mar'20" 
-ggplot(system_daily, aes(days, Actual.AC.consumption_ma/1000.0, color="Actual")) +
-  geom_point(shape=4) + labs(y="AC consumption (kW)", x = "Days since commissioning", colour="") + THEME +
-  theme(legend.position="none") + scale_x_continuous(breaks = seq(1,260,28)) 
+system_daily <- system_daily %>% mutate(Actual.User.Load.W = Actual.CPE1.LED1_P_ma + 
+                                            Actual.CPE1.LED2_P_ma + Actual.CPE1.LED3_P_ma +
+                                            Actual.CPE2.LED1_P_ma + Actual.CPE2.LED2_P_ma + 
+                                            Actual.CPE2.LED3_P_ma + Actual.CPE3.LED1_P_ma + 
+                                            Actual.CPE3.LED2_P_ma + Actual.CPE3.LED3_P_ma +
+                                            Actual.CPE4.LED1_P_ma + Actual.CPE4.LED2_P_ma + 
+                                            Actual.CPE4.LED3_P_ma + Actual.CPE5.LED1_P_ma + 
+                                            Actual.CPE5.LED2_P_ma + Actual.CPE5.LED3_P_ma +
+                                            Actual.CPE6.LED1_P_ma + Actual.CPE6.LED2_P_ma + 
+                                            Actual.CPE6.LED3_P_ma + Actual.CPE7.LED1_P_ma + 
+                                            Actual.CPE7.LED2_P_ma + Actual.CPE7.LED3_P_ma + 
+                                            Actual.S1.vRELAY1_LVL_ma + Actual.S2.vRELAY1_LVL_ma +
+                                            Actual.S3.vRELAY1_LVL_ma + Actual.S4.vRELAY1_LVL_ma)
+
+system_daily_sub <- system_daily[, c(115:116,3)]
+colnames(system_daily_sub) <- c("days", "User load", "AC consumption")
+system_daily_sub <- gather(system_daily_sub, id, value, 2:3)
+# title= "Daily AC consumption and user load at the Hall between Jul'19 and Mar'20" 
+ggplot(system_daily_sub, aes(days, value/1000, color=id, shape=id)) + geom_point() + 
+  scale_shape_manual(values=c(1,4)) + labs(y="Energy consumption (kWh)", x = "Days since commissioning", 
+                                           colour="", shape="") + THEME + 
+  scale_x_continuous(breaks = seq(1,260,28)) 
 ggsave(here(plot_dir,"daily_acLoad_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
 #******************************************************************************************#
 
@@ -203,7 +317,7 @@ ggsave(here(plot_dir,"typical_day_jan20_mar20.pdf"), width = 8, height = 6, unit
 # actual AC load (Yield), Ea (System loss=Ea-Yield), potential PV (Capture loss=Pot. PV- Ea)
 na_seadec_sub <- system_daily[,c(1,2,3,88,94)] 
 colnames(na_seadec_sub) <- c("month", "date", "E_load", "E_a", "E_p")
-na_seadec_sub <- na_seadec_sub %>% mutate(L_c=E_p-E_a, L_s=E_a-E_load)
+na_seadec_sub <- na_seadec_sub %>% mutate(L_c=E_p-E_a, L_bos=E_a-E_load)
 na_seadec_sub <- na_seadec_sub[,-c(4:5)]
 # Daily average per month
 hall_perf <- gather(na_seadec_sub, id, value, c(3:5))
