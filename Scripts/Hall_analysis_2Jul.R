@@ -112,10 +112,6 @@ typical_load <- as.data.frame(typical_load)
 typical_load <- rbind(typical_load, predicted_data)
 
 #"Typical day load profile at the Hall between Jul'19 and Mar'20"
-ggplot(typical_load, aes(timeUse, User.Load.W/1000.0, color=month)) + 
-  geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) + THEME + 
-  scale_y_continuous(breaks=seq(0,0.7,0.1)) + theme(legend.text=element_text(size=7, family="Times New Roman"))+
-  labs(x="Time of day", y="User load (kW)",color="", linetype="")
 ggplot(typical_load[typical_load$month!="Predicted",], aes(timeUse, User.Load.W/1000.0, color=month)) + 
   geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) + THEME + 
   scale_y_continuous(breaks=seq(0,0.7,0.1)) + theme(legend.text=element_text(size=7, family="Times New Roman"))+
@@ -133,6 +129,34 @@ ggplot(overall_load, aes(timeUse, User.Load.W/1000.0, color=month)) +
   scale_y_continuous(breaks=seq(0,0.7,0.1)) + theme(legend.text=element_text(size=7, family="Times New Roman"))+
   labs(x="Time of day", y="User load (kW)",color="", linetype="")
 ggsave(here(plot_dir,"overall_load_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+#******************************************************************************************#
+
+#******************************************************************************************#
+# Plot 6 - Typical AC consumption at Hall between 20th July and 31st Mar
+na_seadec_sub <- imputed_data[,c(1:3, which(grepl("Actual", colnames(imputed_data), fixed=TRUE)))]
+
+typical_load <- na_seadec_sub %>% group_by(month, timeUse) %>% 
+  summarise(AC.Load.W = mean(Actual.AC.consumption_ma))
+typical_load <- as.data.frame(typical_load)
+
+#"Typical day load profile at the Hall between Jul'19 and Mar'20"
+ggplot(typical_load, aes(timeUse, AC.Load.W/1000.0, color=month)) + 
+  geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) + THEME + 
+  scale_y_continuous(breaks=seq(0,0.7,0.1)) + theme(legend.text=element_text(size=7, family="Times New Roman"))+
+  labs(x="Time of day", y="AC consumption (kW)",color="", linetype="")
+ggsave(here(plot_dir,"typical_ACload_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+ggsave(here(plot_dir,"typical_ACload_jul19_mar20.png"), width = 8, height = 6, units = "cm")
+
+#"Typical day load profile at the Hall between Jul'19 and Mar'20"
+overall_load <- typical_load %>% group_by(timeUse) %>% summarise(AC.Load.W=mean(AC.Load.W))
+overall_load <- data.frame(month=rep("Actual",24), timeUse = c(0:23), 
+                           AC.Load.W=overall_load$AC.Load.W,
+                           stringsAsFactors = FALSE)
+ggplot(overall_load, aes(timeUse, AC.Load.W/1000.0, color=month)) + 
+  geom_line(aes(linetype=month)) + scale_x_continuous(breaks=seq(0,24,2)) + THEME + 
+  scale_y_continuous(breaks=seq(0,0.7,0.1)) + theme(legend.text=element_text(size=7, family="Times New Roman"))+
+  labs(x="Time of day", y="User load (kW)",color="", linetype="")
+ggsave(here(plot_dir,"overall_ACload_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
 #******************************************************************************************#
 
 #******************************************************************************************#
@@ -344,11 +368,12 @@ system_daily_sub <- system_daily[, c(115:116,3)]
 colnames(system_daily_sub) <- c("days", "User load", "AC consumption")
 system_daily_sub <- gather(system_daily_sub, id, value, 2:3)
 # title= "Daily AC consumption and user load at the Hall between Jul'19 and Mar'20" 
-ggplot(system_daily_sub, aes(days, value/1000, color=id, shape=id)) + geom_point() + 
+ggplot(system_daily_sub[system_daily_sub$id=="AC consumption",], aes(days, value/1000, color=id, shape=id)) + geom_point() + 
   scale_shape_manual(values=c(1,4)) + labs(y="Energy consumption (kWh)", x = "Days since commissioning", 
                                            colour="", shape="") + THEME + 
-  scale_x_continuous(breaks = seq(1,260,28)) 
+  scale_x_continuous(breaks = seq(1,260,28)) + theme(legend.position="none")
 ggsave(here(plot_dir,"daily_acLoad_jul19_mar20.pdf"), width = 8, height = 6, units = "cm")
+ggsave(here(plot_dir,"daily_acLoad_jul19_mar20.png"), width = 8, height = 6, units = "cm")
 #******************************************************************************************#
 
 #******************************************************************************************#
