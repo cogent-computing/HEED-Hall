@@ -2,7 +2,7 @@
 # Script for preprocessing Hall data from July 2019 to March 2020 to convert to hourly data, #
 # analyse yield of hourly data and explore imputation techniques                             #
 # Authors: K Bhargava                                                                        #
-# Last updated on: 17th July, 2020                                                           #
+# Last updated on: 30th Nov, 2020                                                            #
 #********************************************************************************************#
 
 #******************************************************************************************#
@@ -106,10 +106,22 @@ plotYield <- function(df) {
 plotYield(cpe_qual[cpe_qual$variable=="LED1_P",]) + facet_wrap(~id, nrow=2) + labs(y="Time of day")
 ggsave(here(plot_dir,"yield_cpe.pdf"), width = 8, height = 8, units = "cm")
 
+test <- cpe_qual[cpe_qual$variable=="LED1_P",]
+unique(test$id)
+range(test$yield2)
+mean(test$yield2)
+sd(test$yield2)
+
 # "Yield per hour for Hall sockets: 19 Jul'19 - 31 Mar'20"
 plotYield(sockets_qual[sockets_qual$variable=="vRELAY1_LVL",]) + facet_wrap(~id, nrow=2) + 
   labs(y="Time of day")
 ggsave(here(plot_dir,"yield_sockets.pdf"), width = 8, height = 8, units = "cm")
+
+test <- sockets_qual[sockets_qual$variable=="vRELAY1_LVL",]
+unique(test$id)
+range(test$yield2)
+mean(test$yield2)
+sd(test$yield2)
 
 # "Yield per hour for Hall system data: 19 Jul'19 - 31 Mar'20"
 plotYield(system_qual[system_qual$id=="Solar Charger PV power",]) + labs(y="Time of day")
